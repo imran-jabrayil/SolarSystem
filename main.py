@@ -14,6 +14,8 @@ def draw_sphere(radius, slices, stacks):
     glPushMatrix()
     glMatrixMode(GL_MODELVIEW)
 
+    glRotatef(60, 1, 0, 0)
+
     gluSphere(quadric, radius, slices, stacks)
 
     # Reset texture matrix
