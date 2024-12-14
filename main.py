@@ -142,14 +142,14 @@ def main():
 
     # Planet data: (texture_key, radius, distance_from_sun, orbital_speed, tilt_angle)
     planets = [
-        ("mercury", 0.3, 40, 0.415, 0),
-        ("venus", 0.7, 70, 0.162, 177.4),
-        ("earth", 1.0, 100, 0.1, 23.4),
-        ("mars", 0.5, 150, 0.053, 25.2),
-        ("jupiter", 3.0, 300, 0.0084, 3.1),
-        ("saturn", 2.5, 500, 0.0034, 26.7),
-        ("uranus", 2.0, 700, 0.0011, 97.8),
-        ("neptune", 1.8, 900, 0.0006, 28.3),
+        ("mercury", 0.3, 40, 0.415, -90),    # Mercury has virtually no axial tilt
+        ("venus", 0.7, 70, 0.162, 87.4), # Venus rotates almost upside-down
+        ("earth", 1.0, 100, 0.1, -66.6),   # Earth's axial tilt
+        ("mars", 0.5, 150, 0.053, -64.8),  # Mars' axial tilt
+        ("jupiter", 3.0, 300, 0.0084, -86.9), # Jupiter's axial tilt
+        ("saturn", 2.5, 500, 0.0034, -63.3), # Saturn's axial tilt
+        ("uranus", 2.0, 700, 0.0011, 7.8), # Uranus is tilted sideways
+        ("neptune", 1.8, 900, 0.0006, -61.7), # Neptune's axial tilt
     ]
 
     # Orbital angles for planets and moon
