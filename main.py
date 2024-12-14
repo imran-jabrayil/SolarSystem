@@ -24,6 +24,7 @@ def draw_sphere(radius, slices, stacks, tile_factor=1):
 
     gluDeleteQuadric(quadric)
 
+
 def draw_ring(texture, inner_radius, outer_radius, num_segments=64):
     glEnable(GL_TEXTURE_2D)
     glBindTexture(GL_TEXTURE_2D, texture)
@@ -45,6 +46,7 @@ def draw_ring(texture, inner_radius, outer_radius, num_segments=64):
     glEnd()
     glDisable(GL_TEXTURE_2D)
 
+
 def load_texture(image_path):
     if not os.path.exists(image_path):
         print(f"Error: Texture file '{image_path}' not found.")
@@ -58,7 +60,7 @@ def load_texture(image_path):
 
     texture_data = pygame.image.tostring(texture_surface, "RGB", True)
     width, height = texture_surface.get_size()
-
+    
     glBindTexture(GL_TEXTURE_2D, texture)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture_data)
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
@@ -70,10 +72,10 @@ def load_texture(image_path):
 def init_lighting():
     glEnable(GL_LIGHTING)
     glEnable(GL_LIGHT0)
-
+    
     light_position = [0.0, 0.0, 0.0, 1.0]  # Sun's position
     light_color = [1.0, 1.0, 0.8, 1.0]    # Warm light for the Sun
-
+    
     glLightfv(GL_LIGHT0, GL_POSITION, light_position)
     glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color)
     glLightfv(GL_LIGHT0, GL_SPECULAR, light_color)
@@ -82,12 +84,12 @@ def draw_planet(texture, radius, distance, angle):
     glPushMatrix()
     glRotatef(angle, 0, 1, 0)  # Orbit rotation
     glTranslatef(distance, 0, 0)  # Distance from the Sun
-
+    
     glEnable(GL_TEXTURE_2D)
     glBindTexture(GL_TEXTURE_2D, texture)
     draw_sphere(radius, 32, 32)
     glDisable(GL_TEXTURE_2D)
-
+    
     glPopMatrix()
 
 def draw_stars_background(texture):
@@ -96,12 +98,16 @@ def draw_stars_background(texture):
     glEnable(GL_TEXTURE_2D)
     glBindTexture(GL_TEXTURE_2D, texture)
 
+    # Move the background sphere further away
+    glTranslatef(0, 0, 0)  # Distance from the Sun
+
     # Render a large sphere for the background
     glColor4f(1, 1, 1, 1)  # Ensure the texture renders at full brightness
     draw_sphere(1000, 64, 64, tile_factor=100)  # Large radius for the background
     glDisable(GL_TEXTURE_2D)
     glEnable(GL_LIGHTING)  # Re-enable lighting
     glPopMatrix()
+
 
 def main():
     pygame.init()
@@ -132,23 +138,23 @@ def main():
         pygame.quit()
         return
 
-    # Scaled data: (texture_key, radius, distance_from_sun, orbital_speed)
+    # Planet data: (texture_key, radius, distance_from_sun, orbital_speed)
     planets = [
-        ("mercury", 0.38, 3.9, 4.15),
-        ("venus", 0.95, 7.2, 1.62),
-        ("earth", 1.0, 10.0, 1.0),
-        ("mars", 0.53, 15.2, 0.53),
-        ("jupiter", 11.21, 52.0, 0.084),
-        ("saturn", 9.45, 95.0, 0.034),
-        ("uranus", 4.01, 192.0, 0.011),
-        ("neptune", 3.88, 300.0, 0.006),
+        ("mercury", 0.3, 40, 0.415),
+        ("venus", 0.7, 70, 0.162),
+        ("earth", 1.0, 100, 0.1),
+        ("mars", 0.5, 150, 0.053),
+        ("jupiter", 3.0, 300, 0.0084),
+        ("saturn", 2.5, 500, 0.0034),
+        ("uranus", 2.0, 700, 0.0011),
+        ("neptune", 1.8, 900, 0.0006),
     ]
 
-    sun_radius = 109.0  # Sun's radius scaled in Earth radii
-
+    # Orbital angles for planets and moon
     orbital_angles = {planet[0]: 0 for planet in planets}
     moon_angle = 0  # Moon's orbital angle around Earth
 
+    # Mouse and zoom controls
     mouse_down = False
     rotation_x, rotation_y = 0, 0
     zoom = -100
@@ -161,63 +167,70 @@ def main():
                 pygame.quit()
                 quit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
+                if event.button == 1:  # Left mouse button
                     mouse_down = True
-                elif event.button == 4:
-                    zoom += 2
-                elif event.button == 5:
-                    zoom -= 2
+                elif event.button == 4:  # Mouse wheel up
+                    zoom += 2  # Zoom in
+                elif event.button == 5:  # Mouse wheel down
+                    zoom -= 2  # Zoom out
             elif event.type == pygame.MOUSEBUTTONUP:
-                if event.button == 1:
+                if event.button == 1:  # Left mouse button
                     mouse_down = False
             elif event.type == pygame.MOUSEMOTION:
                 if mouse_down:
                     dx, dy = event.rel
-                    rotation_x += dy * 0.2
+                    rotation_x += dy * 0.2  # Adjust sensitivity
                     rotation_y += dx * 0.2
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
         init_lighting()
 
+        # Reset and apply camera transformations
         glLoadIdentity()
         gluPerspective(45, (display[0] / display[1]), 0.1, 5000.0)
         glTranslatef(0.0, 0.0, zoom)
         glRotatef(rotation_x, 1, 0, 0)
         glRotatef(rotation_y, 0, 1, 0)
 
+        # Draw stars background
         draw_stars_background(textures["stars"])
 
+        # Draw Sun
         glPushMatrix()
         glDisable(GL_LIGHTING)
         glEnable(GL_TEXTURE_2D)
         glBindTexture(GL_TEXTURE_2D, textures["sun"])
-        draw_sphere(sun_radius, 32, 32)
+        draw_sphere(2.0, 32, 32)  # Sun's size
         glDisable(GL_TEXTURE_2D)
         glEnable(GL_LIGHTING)
         glPopMatrix()
 
+        # Draw planets
         for planet, radius, distance, speed in planets:
-            orbital_angles[planet] += speed
+            orbital_angles[planet] += speed  # Update orbital angle
             draw_planet(textures[planet], radius, distance, orbital_angles[planet])
 
+            # Add rings to Saturn
             if planet == "saturn":
                 glPushMatrix()
-                glRotatef(orbital_angles["saturn"], 0, 1, 0)
-                glTranslatef(distance, 0, 0)
-                draw_ring(textures["saturn_ring"], 9.5, 12.0)
+                glRotatef(orbital_angles["saturn"], 0, 1, 0)  # Saturn's orbit
+                glTranslatef(distance, 0, 0)  # Saturn's position
+                draw_ring(textures["saturn_ring"], 3.0, 5.0)  # Inner and outer radius
                 glPopMatrix()
 
+            # Add Moon orbiting Earth
             if planet == "earth":
-                moon_angle += 2.0
+                moon_angle += 2.0  # Moon's orbital speed around Earth
                 glPushMatrix()
-                glRotatef(orbital_angles["earth"], 0, 1, 0)
-                glTranslatef(distance, 0, 0)
-                draw_planet(textures["moon"], 0.27, 1.5, moon_angle)
+                glRotatef(orbital_angles["earth"], 0, 1, 0)  # Earth's orbit
+                glTranslatef(distance, 0, 0)  # Earth's position
+                draw_planet(textures["moon"], 0.3, 1.5, moon_angle)  # Moon size and distance from Earth
                 glPopMatrix()
 
         pygame.display.flip()
         clock.tick(60)
+
 
 if __name__ == "__main__":
     main()
