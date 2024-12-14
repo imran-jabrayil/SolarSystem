@@ -5,14 +5,13 @@ from OpenGL.GLU import *
 import os
 import math
 
-def draw_sphere(radius, slices, stacks, tile_factor=1):
+def draw_sphere(radius, slices, stacks):
     quadric = gluNewQuadric()
     gluQuadricTexture(quadric, GL_TRUE)
 
     # Enable texture tiling
     glMatrixMode(GL_TEXTURE)
     glPushMatrix()
-    glScalef(tile_factor, tile_factor, 1.0)  # Repeat the texture
     glMatrixMode(GL_MODELVIEW)
 
     gluSphere(quadric, radius, slices, stacks)
@@ -103,7 +102,7 @@ def draw_stars_background(texture):
 
     # Render a large sphere for the background
     glColor4f(1, 1, 1, 1)  # Ensure the texture renders at full brightness
-    draw_sphere(1000, 64, 64, tile_factor=100)  # Large radius for the background
+    draw_sphere(1000, 64, 64)  # Large radius for the background
     glDisable(GL_TEXTURE_2D)
     glEnable(GL_LIGHTING)  # Re-enable lighting
     glPopMatrix()
@@ -119,7 +118,7 @@ def main():
 
     # Load textures
     textures = {
-        "stars": load_texture("textures/8k_stars.jpg"),
+        "stars": load_texture("textures/8k_stars_milky_way.jpg"),
         "sun": load_texture("textures/8k_sun.jpg"),
         "mercury": load_texture("textures/8k_mercury.jpg"),
         "venus": load_texture("textures/4k_venus_atmosphere.jpg"),
