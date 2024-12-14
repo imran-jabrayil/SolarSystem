@@ -5,7 +5,7 @@ from OpenGL.GLU import *
 import os
 import math
 
-def draw_sphere(radius, slices, stacks):
+def draw_sphere(radius, slices, stacks, tilt_angle=0):
     quadric = gluNewQuadric()
     gluQuadricTexture(quadric, GL_TRUE)
 
@@ -14,7 +14,8 @@ def draw_sphere(radius, slices, stacks):
     glPushMatrix()
     glMatrixMode(GL_MODELVIEW)
 
-    glRotatef(60, 1, 0, 0)
+    # Apply tilt angle
+    glRotatef(tilt_angle, 1, 0, 0)
 
     gluSphere(quadric, radius, slices, stacks)
 
@@ -81,14 +82,14 @@ def init_lighting():
     glLightfv(GL_LIGHT0, GL_DIFFUSE, light_color)
     glLightfv(GL_LIGHT0, GL_SPECULAR, light_color)
 
-def draw_planet(texture, radius, distance, angle):
+def draw_planet(texture, radius, distance, angle, tilt_angle=0):
     glPushMatrix()
     glRotatef(angle, 0, 1, 0)  # Orbit rotation
     glTranslatef(distance, 0, 0)  # Distance from the Sun
     
     glEnable(GL_TEXTURE_2D)
     glBindTexture(GL_TEXTURE_2D, texture)
-    draw_sphere(radius, 32, 32)
+    draw_sphere(radius, 32, 32, tilt_angle)
     glDisable(GL_TEXTURE_2D)
     
     glPopMatrix()
@@ -100,11 +101,11 @@ def draw_stars_background(texture):
     glBindTexture(GL_TEXTURE_2D, texture)
 
     # Move the background sphere further away
-    glTranslatef(0, 0, 0)  # Distance from the Sun
+    glTranslatef(0, 0, 0)
 
-    # Render a large sphere for the background
+    # Render a large sphere for the background with a proper tilt
     glColor4f(1, 1, 1, 1)  # Ensure the texture renders at full brightness
-    draw_sphere(1000, 64, 64)  # Large radius for the background
+    draw_sphere(1000, 64, 64, tilt_angle=90)  # Add the necessary tilt
     glDisable(GL_TEXTURE_2D)
     glEnable(GL_LIGHTING)  # Re-enable lighting
     glPopMatrix()
@@ -139,16 +140,16 @@ def main():
         pygame.quit()
         return
 
-    # Planet data: (texture_key, radius, distance_from_sun, orbital_speed)
+    # Planet data: (texture_key, radius, distance_from_sun, orbital_speed, tilt_angle)
     planets = [
-        ("mercury", 0.3, 40, 0.415),
-        ("venus", 0.7, 70, 0.162),
-        ("earth", 1.0, 100, 0.1),
-        ("mars", 0.5, 150, 0.053),
-        ("jupiter", 3.0, 300, 0.0084),
-        ("saturn", 2.5, 500, 0.0034),
-        ("uranus", 2.0, 700, 0.0011),
-        ("neptune", 1.8, 900, 0.0006),
+        ("mercury", 0.3, 40, 0.415, 0),
+        ("venus", 0.7, 70, 0.162, 177.4),
+        ("earth", 1.0, 100, 0.1, 23.4),
+        ("mars", 0.5, 150, 0.053, 25.2),
+        ("jupiter", 3.0, 300, 0.0084, 3.1),
+        ("saturn", 2.5, 500, 0.0034, 26.7),
+        ("uranus", 2.0, 700, 0.0011, 97.8),
+        ("neptune", 1.8, 900, 0.0006, 28.3),
     ]
 
     # Orbital angles for planets and moon
@@ -159,6 +160,8 @@ def main():
     mouse_down = False
     rotation_x, rotation_y = 0, 0
     zoom = -100
+
+    paused = False  # Add a paused state
 
     clock = pygame.time.Clock()
 
@@ -182,6 +185,14 @@ def main():
                     dx, dy = event.rel
                     rotation_x += dy * 0.2  # Adjust sensitivity
                     rotation_y += dx * 0.2
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:  # Spacebar toggles the pause state
+                    paused = not paused
+
+        if not paused:  # Only update orbital angles if not paused
+            for planet in planets:
+                orbital_angles[planet[0]] += planet[3]  # Update orbital angle
+            moon_angle += 2.0  # Update Moon's orbital angle around Earth
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
@@ -208,9 +219,8 @@ def main():
         glPopMatrix()
 
         # Draw planets
-        for planet, radius, distance, speed in planets:
-            orbital_angles[planet] += speed  # Update orbital angle
-            draw_planet(textures[planet], radius, distance, orbital_angles[planet])
+        for planet, radius, distance, speed, tilt_angle in planets:
+            draw_planet(textures[planet], radius, distance, orbital_angles[planet], tilt_angle)
 
             # Add rings to Saturn
             if planet == "saturn":
@@ -222,11 +232,10 @@ def main():
 
             # Add Moon orbiting Earth
             if planet == "earth":
-                moon_angle += 2.0  # Moon's orbital speed around Earth
                 glPushMatrix()
                 glRotatef(orbital_angles["earth"], 0, 1, 0)  # Earth's orbit
                 glTranslatef(distance, 0, 0)  # Earth's position
-                draw_planet(textures["moon"], 0.3, 1.5, moon_angle)  # Moon size and distance from Earth
+                draw_planet(textures["moon"], 0.3, 1.5, moon_angle, 0)  # Moon has negligible tilt
                 glPopMatrix()
 
         pygame.display.flip()
