@@ -201,7 +201,7 @@ def main():
         glDisable(GL_LIGHTING)
         glEnable(GL_TEXTURE_2D)
         glBindTexture(GL_TEXTURE_2D, textures["sun"])
-        draw_sphere(2.0, 32, 32)  # Sun's size
+        draw_sphere(20, 32, 32)  # Sun's size
         glDisable(GL_TEXTURE_2D)
         glEnable(GL_LIGHTING)
         glPopMatrix()
